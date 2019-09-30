@@ -216,7 +216,6 @@ def processConfigurableWhileLoop_BuiltInMethod(node, indent=""):
     for child in node:
         processNode(child, indent + "  ")
 
-##ConfigurableFlatCaseStructure {'Id': 'n50', 'Bounds': '10163 -335 207 2137', 'DataType': 'Int32', 'UserSelectorBounds': '0 0 0 0', 'Default': 'D62', 'PairedConfigurableMethodCall': 'n64'}    
 def processConfigurableFlatCaseStructure(node, indent=""):
     print(indent + "FlatCaseStructure(" + node.attrib["DataType"] + ", " + node.attrib["Default"] + ")")
     for child in node:
@@ -224,6 +223,21 @@ def processConfigurableFlatCaseStructure(node, indent=""):
             processNode(child, indent + "  ")
 
 def processConfigurableFlatCaseStructure_Case(node, indent=""):
+    print(indent + "Case(" + node.attrib["Id"] + ", " + node.attrib["Pattern"] + ")")
+    startNode = None
+    for child in node:
+        #printxml(indent + "  ", child)
+        if gettag(child) == "SequenceNode" and getSequenceOut(child) != None:
+            startNode = child
+    processCompoundStmt(node, indent + "  ", startNode)
+
+def processConfigurableCaseStructure(node, indent=""):
+    print(indent + "CaseStructure(" + node.attrib["DataType"] + ", " + node.attrib["Default"] + ")")
+    for child in node:
+        if gettag(child) != "Terminal":
+            processNode(child, indent + "  ")
+
+def processConfigurableCaseStructure_Case(node, indent=""):
     print(indent + "Case(" + node.attrib["Id"] + ", " + node.attrib["Pattern"] + ")")
     startNode = None
     for child in node:
