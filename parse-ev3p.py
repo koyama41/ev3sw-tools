@@ -135,6 +135,11 @@ def processStartBlock(node, indent=""):
     print(indent + "StartBlock")
 
 def processCompoundStmt(node, indent="", startBlock=None):
+    if len(node) == 1:
+        for child in node:
+            processNode(child, indent)
+        return
+
     id2node = {}
     seqInWire2id = {}
     id2seqOutWire = {}
@@ -169,10 +174,12 @@ def processCompoundStmt(node, indent="", startBlock=None):
         while True:
             alreadyprinted[getId(walknode)] = True
             pairednodeid = processNode(walknode, indent)
+            wire = getSequenceOut(walknode, tag)
             if pairednodeid != None:
                 alreadyprinted[pairednodeid] = True
-                processNode(id2node[pairednodeid], indent)
-            wire = getSequenceOut(walknode, tag)
+                pairednode = id2node[pairednodeid]
+                processNode(pairednode, indent)
+                wire = getSequenceOut(pairednode, tag)
             if wire != None and wire in seqInWire2id:
                 nodeid = seqInWire2id[wire]
                 if nodeid in id2node:
@@ -196,7 +203,7 @@ def processCompoundStmt(node, indent="", startBlock=None):
                     pass
                 else:
                     print("")
-                    print(indent + "###NOT PRINTED###")
+                    print(indent + "###NOT CONNECTED###")
                     captionAlreadyPrinted = True
                 printxml(indent + "##", child)
     if captionAlreadyPrinted:
