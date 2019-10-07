@@ -3,6 +3,9 @@
 import xml.etree.ElementTree as ET
 import sys
 import re
+import argparse
+
+global args
 
 def updateDict(dictname, dict, key, value, printWarning=False):
     if key == None:
@@ -132,7 +135,8 @@ def processPairedConfigurableMethodCall(node, indent=""):
     return node.attrib["PairedStructure"]
 
 def processStartBlock(node, indent=""):
-    print(indent + "StartBlock")
+    if args.verbose:
+        print(indent + "StartBlock")
 
 def processCompoundStmt(node, indent="", startBlock=None):
     if len(node) == 1:
@@ -280,13 +284,24 @@ def processUnknownNode(node, indent=""):
     printxml(indent + "##", node)
 
 def processNode(node, indent=""):
-    gf = globals()
     funcname = "process" + re.sub('\.', '_', gettag(node))
+    gf = globals()
     if funcname in gf:
         func = gf[funcname]
         return func(node, indent)
     else:
         return processUnknownNode(node, indent)
 
-processNode(ET.fromstring(sys.stdin.read()))
 
+parser = argparse.ArgumentParser(description="analyze .ev3p file(s)")
+parser.add_argument('inputfile', type=argparse.FileType("r"),
+                    help='input file name')
+parser.add_argument('-v', '--verbose',
+                    action='store_true',
+                    help='show verbose messages')
+args = parser.parse_args()
+
+if args.inputfile:
+    processNode(ET.fromstring(args.inputfile.read()))
+else:
+    processNode(ET.fromstring(sys.stdin.read()))
