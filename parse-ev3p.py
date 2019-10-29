@@ -90,7 +90,7 @@ def printxml(indent, node):
 def processConfigurableMethodTerminal(node, indent=""):
     i = None
     d = None
-    p = None
+    t = None
     w = None
     for child in node:
         if gettag(child) == "Terminal":
@@ -114,15 +114,64 @@ def processConfigurableMethodTerminal(node, indent=""):
             else:
                 print(indent + i + "." + d + " :: " + t + " = Wire(" + w + ")")
 
-def processMethodCall(node, indent="", name="Call"):
-    print(indent + name + "(" + node.attrib["Target"] + ")")
+def processConfigurableMethodTerminalNoIndent(comma, node):
+    i = None
+    d = None
+    t = None
+    w = None
     for child in node:
-        if gettag(child) == "ConfigurableMethodTerminal":
-             processConfigurableMethodTerminal(child, indent + "  ")
-        elif gettag(child) == "Terminal":
-            pass
+        if gettag(child) == "Terminal":
+            i = child.attrib["Id"]
+            d = child.attrib["Direction"]
+            t = child.attrib["DataType"]
+            if "Wire" in child.attrib:
+                w = child.attrib["Wire"]
+
+    if i == "InterruptsToListenFor_16B03592_CD76_4D58_8DC3_E3C3091E327A" and d == "Input" and t == "Int32":
+        return False
+    print(comma, end="")
+
+    if d == "Output":
+        print("out=", end="")
+    if i == "Degrees":
+        print("deg=", end="")
+    if i == "Brake\\ At\\ End":
+        print("brake=", end="")
+    if w == None:
+        if "ConfiguredValue" in node.attrib:
+            print(node.attrib["ConfiguredValue"], end="")
         else:
-            processNode(child, indent + "  ##")
+            print("None", end="")
+    else:
+        if "ConfiguredValue" in node.attrib:
+            print("Wire(" + w + "," + node.attrib["ConfiguredValue"] + ")", end="")
+        else:
+            print("Wire(" + w + ")", end="")
+    return True
+
+def processMethodCall(node, indent="", name="Call"):
+    if args.verbose:
+        print(indent + name + "(" + node.attrib["Target"] + ")")
+        for child in node:
+            if gettag(child) == "ConfigurableMethodTerminal":
+                processConfigurableMethodTerminal(child, indent + "  ")
+            elif gettag(child) == "Terminal":
+                pass
+            else:
+                processNode(child, indent + "  ##")
+    else:
+        target = name + "_" + node.attrib["Target"]
+        print(indent + re.sub('\\\..*$', '', target) + "(", end="")
+        comma = ""
+        for child in node:
+            if gettag(child) == "ConfigurableMethodTerminal":
+                if processConfigurableMethodTerminalNoIndent(comma, child):
+                    comma = ", "
+        print(")")
+        for child in node:
+            if     (gettag(child) != "ConfigurableMethodTerminal"
+                    and gettag(child) != "Terminal"):
+                processNode(child, indent + "  ##")
 
 def processConfigurableWaitFor(node, indent=""):
     processMethodCall(node, indent, "WaitFor")
